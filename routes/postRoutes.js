@@ -4,12 +4,13 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const postController = require("../controllers/postController");
+const upload = require("../middleware/postUploadMiddleware");
 
 // =========================
 // Create Post
 // =========================
 
-router.post("/", authMiddleware, postController.createPost);
+router.post("/", authMiddleware, upload.array("attachments", 20), postController.createPost);
 
 // =========================
 // Home Feed

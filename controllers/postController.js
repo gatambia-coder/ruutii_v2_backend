@@ -8,14 +8,53 @@ exports.createPost = async (req, res) => {
 
     try {
 
-        const { text, visibility } = req.body;
+        const { caption, visibility, location } = req.body;
 
-        if (!text || text.trim() === "") {
+        const attachments = [];
 
-            return res.status(400).json({
+        if (req.files && req.files.length > 0) {
 
-                success: false,
-                message: "Post cannot be empty."
+            req.files.forEach(file => {
+
+                let type = "";
+
+                if (file.mimetype.startsWith("image/")) {
+
+                    type = "image";
+
+                }
+
+                else if (file.mimetype.startsWith("video/")) {
+
+                    type = "video";
+
+                }
+
+                else if (file.mimetype === "application/pdf") {
+
+                    type = "pdf";
+
+                }
+
+                else if (file.mimetype.startsWith("audio/")) {
+
+                    type = "audio";
+
+                }
+
+                attachments.push({
+
+                    type,
+
+                    url: `/uploads/posts/${file.filename}`,
+
+                    originalName: file.originalname,
+
+                    mimeType: file.mimetype,
+
+                    size: file.size
+
+                });
 
             });
 
@@ -25,19 +64,25 @@ exports.createPost = async (req, res) => {
 
             author: req.user._id,
 
-            text,
+            caption,
 
-            visibility: visibility || "public"
+            attachments,
+
+            visibility,
+
+            location
 
         });
 
-        await post.populate(
+        const populatedPost = await Post.findById(post._id)
 
-            "author",
+            .populate(
 
-            "firstName lastName username profilePicture"
+                "author",
 
-        );
+                "firstName lastName username profilePicture"
+
+            );
 
         res.status(201).json({
 
@@ -45,7 +90,7 @@ exports.createPost = async (req, res) => {
 
             message: "Post created successfully.",
 
-            post
+            post: populatedPost
 
         });
 
