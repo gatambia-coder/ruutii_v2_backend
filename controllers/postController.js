@@ -217,46 +217,58 @@ exports.updatePost = async (req, res) => {
 
     try {
 
-        const { text, visibility } = req.body;
+        const { postId } = req.params;
 
-        const post = await Post.findById(req.params.postId);
+        const { caption, visibility, location } = req.body;
+
+        const post = await Post.findById(postId);
 
         if (!post) {
 
             return res.status(404).json({
 
                 success: false,
+
                 message: "Post not found."
 
             });
 
         }
 
-        // Only the owner can edit
-
         if (post.author.toString() !== req.user._id.toString()) {
 
             return res.status(403).json({
 
                 success: false,
-                message: "You are not allowed to edit this post."
+
+                message: "Unauthorized."
 
             });
 
         }
 
-        if (text !== undefined)
-            post.text = text;
+        if (caption !== undefined)
+            post.caption = caption;
 
         if (visibility !== undefined)
             post.visibility = visibility;
 
+        if (location !== undefined)
+            post.location = location;
+
+        post.edited = true;
+
         await post.save();
 
-        await post.populate(
-            "author",
-            "firstName lastName username profilePicture"
-        );
+        const updatedPost = await Post.findById(post._id)
+
+            .populate(
+
+                "author",
+
+                "firstName lastName username profilePicture"
+
+            );
 
         res.json({
 
@@ -264,7 +276,7 @@ exports.updatePost = async (req, res) => {
 
             message: "Post updated successfully.",
 
-            post
+            post: updatedPost
 
         });
 
@@ -290,11 +302,95 @@ exports.updatePost = async (req, res) => {
 // Delete Post
 // =========================
 
+const fs = require("fs");
+const path = require("path");
+
 exports.deletePost = async (req, res) => {
 
     try {
 
         const post = await Post.findById(req.params.postId);
+
+        if (!post) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Post not found."
+
+            });
+
+        }
+
+
+        if (post.author.toString() !== req.user._id.toString()) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message: "Unauthorized."
+
+            });
+
+        }
+
+        for (const attachment of post.attachments) {
+
+            const filePath = path.join(
+
+                __dirname,
+
+                "..",
+
+                attachment.url
+
+            );
+
+            if (fs.existsSync(filePath)) {
+
+                fs.unlinkSync(filePath);
+
+            }
+
+        }
+
+        await post.deleteOne();
+
+        res.json({
+
+            success: true,
+
+            message: "Post deleted successfully."
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Server error."
+
+        });
+
+    }
+
+};
+
+exports.deleteAttachment = async (req, res) => {
+
+    try {
+
+        const { postId, attachmentIndex } = req.params;
+
+        const post = await Post.findById(postId);
 
         if (!post) {
 
@@ -307,26 +403,67 @@ exports.deletePost = async (req, res) => {
 
         }
 
-        // Only the owner can delete
-
         if (post.author.toString() !== req.user._id.toString()) {
 
             return res.status(403).json({
 
                 success: false,
-                message: "You are not allowed to delete this post."
+                message: "Unauthorized."
 
             });
 
         }
 
-        await Post.findByIdAndDelete(req.params.postId);
+        const index = parseInt(attachmentIndex);
+
+        if (
+
+            isNaN(index) ||
+
+            index < 0 ||
+
+            index >= post.attachments.length
+
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "Invalid attachment index."
+
+            });
+
+        }
+
+        const attachment = post.attachments[index];
+
+        const filePath = path.join(
+
+            __dirname,
+
+            "..",
+
+            attachment.url
+
+        );
+
+        if (fs.existsSync(filePath)) {
+
+            fs.unlinkSync(filePath);
+
+        }
+
+        post.attachments.splice(index, 1);
+
+        await post.save();
 
         res.json({
 
             success: true,
 
-            message: "Post deleted successfully."
+            message: "Attachment deleted successfully.",
+
+            attachments: post.attachments
 
         });
 

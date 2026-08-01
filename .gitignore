@@ -10,3 +10,11 @@ node_modules/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+node_modules/
+.env
+
+uploads/posts/*
+uploads/profile-pictures/*
+uploads/cover-photos/*
+uploads/temp/*
