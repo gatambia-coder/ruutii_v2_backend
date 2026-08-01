@@ -1,0 +1,73 @@
+const mongoose = require("mongoose");
+
+const messageSchema = new mongoose.Schema(
+
+    {
+
+        sender: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+            required: true
+
+        },
+
+        receiver: {
+
+            type: mongoose.Schema.Types.ObjectId,
+
+            ref: "User",
+
+            required: true
+
+        },
+
+        text: {
+
+            type: String,
+
+            trim: true,
+
+            maxlength: 5000,
+
+            default: ""
+
+        },
+
+        image: {
+
+            type: String,
+
+            default: ""
+
+        },
+
+        pdf: {
+
+            type: String,
+
+            default: ""
+
+        },
+
+        isRead: {
+
+            type: Boolean,
+
+            default: false
+
+        }
+
+    },
+
+    {
+
+        timestamps: true
+
+    }
+
+);
+
+module.exports = mongoose.model("Message", messageSchema);
