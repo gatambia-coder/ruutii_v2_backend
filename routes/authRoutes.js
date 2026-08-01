@@ -6,6 +6,7 @@ const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const userController = require("../controllers/userController");
 const upload = require("../middleware/uploadMiddleware");
+const coverUpload = require("../middleware/coverUploadMiddleware");
 
 // Authentication
 router.post("/register", authController.register);
@@ -21,6 +22,13 @@ router.put(
     authMiddleware,
     upload.single("profilePicture"),
     userController.uploadProfilePicture
+);
+
+router.put(
+    "/cover-photo",
+    authMiddleware,
+    coverUpload.single("coverPhoto"),
+    userController.uploadCoverPhoto
 );
 
 module.exports = router;
