@@ -11,10 +11,14 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-node_modules/
-.env
-
+# Uploaded user files
 uploads/posts/*
 uploads/profile-pictures/*
 uploads/cover-photos/*
 uploads/temp/*
+
+# Keep the upload folder structure
+!uploads/posts/.gitkeep
+!uploads/profile-pictures/.gitkeep
+!uploads/cover-photos/.gitkeep
+!uploads/temp/.gitkeep
